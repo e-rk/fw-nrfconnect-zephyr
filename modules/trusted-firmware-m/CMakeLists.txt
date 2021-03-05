@@ -88,7 +88,13 @@ function(trusted_firmware_build)
   endif()
 
   set(VENEERS_FILE ${TFM_BINARY_DIR}/secure_fw/s_veneers.o)
-  set(PSA_API_NS_PATH ${TFM_BINARY_DIR}/interface/libpsa_api_ns.a)
+  set(TFM_API_NS_FILE ${TFM_BINARY_DIR}/app/libtfm_api_ns.a)
+  # This hack is only needed for successful linking when the trusted-firmware-m
+  # module revision from the zephyr manifest is used (so actually only for CI
+  # tests). To be removed when this revision is updated accordingly.
+  if(EXISTS "${ZEPHYR_CURRENT_MODULE_DIR}/tf-m-tests/test/test_services/tfm_core_test/auto_generated/")
+    set(TFM_API_NS_FILE ${TFM_BINARY_DIR}/interface/libpsa_api_ns.a)
+  endif()
   set(TFM_GENERATED_INCLUDES ${TFM_BINARY_DIR}/generated/interface/include)
 
   if(TFM_BL2)
@@ -105,7 +111,7 @@ function(trusted_firmware_build)
 
   set(BUILD_BYPRODUCTS
     ${VENEERS_FILE}
-    ${PSA_API_NS_PATH}
+    ${TFM_API_NS_FILE}
     ${TFM_GENERATED_INCLUDES}/psa_manifest/sid.h
     ${BL2_BIN_FILE}
     ${BL2_HEX_FILE}
@@ -197,7 +203,7 @@ function(trusted_firmware_build)
     PUBLIC
     zephyr_interface
     INTERFACE
-    ${PSA_API_NS_PATH}
+    ${TFM_API_NS_FILE}
     ${VENEERS_FILE}
     $<TARGET_FILE:tfm_api>
   )
